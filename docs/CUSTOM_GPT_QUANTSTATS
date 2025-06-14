@@ -1,0 +1,125 @@
+openapi: 3.1.0
+info:
+  title: QuantStats Portfolio Analysis API
+  description: |
+    An API for generating comprehensive portfolio analysis reports using QuantStats, providing detailed performance metrics, risk analysis, and portfolio optimization insights.
+    
+    This API connects Yahoo Finance data with QuantStats analytics to deliver in-depth performance analysis of stocks and portfolios. The analysis includes key metrics like Sharpe ratio, Sortino ratio, Maximum Drawdown, Value at Risk, and visualizations of returns, drawdowns, rolling statistics, and benchmark comparisons.
+    
+    The generated HTML reports provide interactive visualizations and detailed metrics tables that help investors understand performance characteristics, risk profiles, and how assets compare against benchmarks like the S&P 500.
+  version: 1.0.0
+servers:
+  - url: https://quantstats.hosting.tigzig.com
+    description: QuantStats Analysis API server
+paths:
+  /api/analyze:
+    post:
+      operationId: createPortfolioAnalysis
+      summary: Generate portfolio analysis report
+      description: Creates portfolio analysis with performance metrics, risk analytics, and benchmark comparisons. Returns an interactive HTML report with visualizations of key metrics.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - stock_code
+                - start_date
+                - end_date
+              properties:
+                stock_code:
+                  type: string
+                  description: |
+                    Stock symbol to analyze (e.g., 'AAPL', 'GOOG', '^NSEI'). 
+                    Must be a valid Yahoo Finance ticker symbol. Use standard market symbols like 'AAPL' for Apple, 'MSFT' for Microsoft.
+                    For indices, use '^' prefix (e.g., '^GSPC' for S&P 500, '^IXIC' for NASDAQ Composite, '^DJI' for Dow Jones).
+                    Currently only supports analyzing one symbol at a time.
+                  example: "AAPL"
+                benchmark_code:
+                  type: string
+                  description: |
+                    Benchmark symbol for comparison (default: ^GSPC for S&P 500 Index).
+                    Must be a valid Yahoo Finance ticker symbol. Common benchmarks include:
+                    - ^GSPC (S&P 500)
+                    - ^IXIC (NASDAQ Composite)
+                    - ^DJI (Dow Jones Industrial Average)
+                    - ^RUT (Russell 2000)
+                  example: "^GSPC"
+                start_date:
+                  type: string
+                  format: date
+                  description: |
+                    Start date for analysis in YYYY-MM-DD format.
+                    Should be at least 5 years before end_date for meaningful analysis.
+                    Historical data is available based on Yahoo Finance's database, typically going back to the 1990s for major stocks.
+                  example: "2023-01-01"
+                end_date:
+                  type: string
+                  format: date
+                  description: |
+                    End date for analysis in YYYY-MM-DD format.
+                    Must be after start_date. Use today's date as default
+                    The analysis includes this date in the results.
+                  example: "2024-01-01"
+                risk_free_rate:
+                  type: number
+                  description: |
+                    Risk-free rate as percentage (e.g., 5.0 for 5%).
+                    Used in Sharpe ratio calculations and other risk-adjusted return metrics.
+                    Typically set to the yield of a 3-month Treasury bill or similar short-term government security.
+                    Values generally range from 0-10% depending on current economic conditions.
+                  example: 5.0
+      responses:
+        '200':
+          description: Successful generation of portfolio analysis report
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    description: Indicates if the report generation was successful
+                    example: true
+                  message:
+                    type: string
+                    description: Success message with details about the generated report
+                    example: "Successfully generated report for AAPL vs ^GSPC"
+                  report_url:
+                    type: string
+                    description: URL to access the interactive HTML report with visualizations
+                    example: "https://quantstats.hosting.tigzig.com/static/reports/GOOG_vs_%5EGSPC_20250502_105159.html"
+        '400':
+          description: Invalid input parameters
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  detail:
+                    type: string
+                    description: Error message describing what went wrong
+                    example: "Invalid date range specified. Start date must be before end date."
+        '404':
+          description: Data not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  detail:
+                    type: string
+                    description: Error message indicating data not found on Yahoo Finance
+                    example: "No data found for stock AAPL"
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  detail:
+                    type: string
+                    description: Error message describing what went wrong
+                    example: "Error generating analysis: Internal server error"

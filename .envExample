@@ -1,0 +1,5 @@
+# For Local Development. Dont update to remote server or keep 0 for remote server
+IS_LOCAL_DEVELOPMENT=1
+
+# Base URL where this is deployed. To construct full path for reports
+BASE_URL_FOR_REPORTS=https://quantstat-nextjs.vercel.app/
